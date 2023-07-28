@@ -4,6 +4,7 @@ import com.entity.Weather;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,6 +21,8 @@ public interface WeatherMapper {
     int batchInsert(List<Weather> weatherList);
 
     List<Weather> select(@Param("limit") Long limit, @Param("offset")Long offset);
+
+    int delByTs(Date ts);
 
     void createDB();
 

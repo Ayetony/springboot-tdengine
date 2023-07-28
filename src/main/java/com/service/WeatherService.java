@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,6 +20,8 @@ import java.util.List;
 @Service
 @Transactional(transactionManager = "tdengineTransactionManager")
 public class WeatherService {
+
+    private SimpleDateFormat simpleDateFormat;
 
     @Autowired
     private WeatherMapper weatherMapper;
@@ -42,6 +47,17 @@ public class WeatherService {
 
     public int save(List<Weather> weatherList) {
         return weatherMapper.batchInsert(weatherList);
+    }
+
+    public int del(String time){
+        try {
+            simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            Date parseDate = simpleDateFormat.parse(time);
+            return weatherMapper.delByTs(parseDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 
 }

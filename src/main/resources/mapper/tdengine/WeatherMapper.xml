@@ -45,5 +45,9 @@
         </foreach>
     </insert>
 
+    <delete id="delByTs" parameterType="date">
+        delete from weather where ts=#{ts}
+    </delete>
+
 
 </mapper>

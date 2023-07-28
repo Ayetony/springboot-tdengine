@@ -40,6 +40,12 @@ public class WeatherController {
         return weatherService.query(limit, offset);
     }
 
+
+    @GetMapping("/del")
+    public int delWeather(@RequestParam String time){
+        return weatherService.del(time);
+    }
+
     /**
      * upload single weather info
      * @param temperature
