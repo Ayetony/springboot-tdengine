@@ -2,12 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mapper.mysql.MysqlMapper">
 
-    <select id="selectOne" resultType="java.util.Map">
-    SELECT
-     *
-    FROM
-      assess_model
-      limit 1
-  </select>
+    <select id="selectAllOpcServers" resultType="com.entity.OpcTest">
+        SELECT *
+        FROM opc_test
+    </select>
 
 </mapper>
