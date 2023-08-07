@@ -45,34 +45,25 @@ import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.
 @Component
 public class OpcSubscription {
 
-    //kepServer 监控项
-    List<UaMonitoredItem> uaMonitoredItemList = CollUtil.newArrayList();
-
     private final Map<OpcServer, OpcUaClient> clientMap = MapUtil.newConcurrentHashMap();
     private final Map<OpcUaClient, Boolean> clientStatusMap = MapUtil.newConcurrentHashMap();
     private final Set<UaSubscription> failedSubscriptionSet = CollUtil.newLinkedHashSet();
-
-
-    @Value("${opc-ua.requestedPublishingInterval:1000.0}")
-    private double requestedPublishingInterval;
-
-    @Value("${opc-ua.samplingInterval:1000.0}")
-    private double samplingInterval;
-
-    @Value("${opc-ua.queueSize:10}")
-    private int queueSize;
-
-    @Resource
-    private AvicWebSocketOperator webSocketOperator;
-
-    @Resource
-    private MysqlService mysqlService;
-
-    @Resource
-    private RedisUtils redisUtils;
-
+    //kepServer 监控项
+    List<UaMonitoredItem> uaMonitoredItemList = CollUtil.newArrayList();
     @Resource
     OpcConsumerLocator opcConsumerLocator;
+    @Value("${opc-ua.requestedPublishingInterval:1000.0}")
+    private double requestedPublishingInterval;
+    @Value("${opc-ua.samplingInterval:1000.0}")
+    private double samplingInterval;
+    @Value("${opc-ua.queueSize:10}")
+    private int queueSize;
+    @Resource
+    private AvicWebSocketOperator webSocketOperator;
+    @Resource
+    private MysqlService mysqlService;
+    @Resource
+    private RedisUtils redisUtils;
 
     /**
      * 系统启动时加载：启动所有可用的OPCServer、启动订阅
@@ -153,7 +144,6 @@ public class OpcSubscription {
         try {
             // 创建连接
             client.connect().get();
-
             UaSubscription subscription = client.getSubscriptionManager().createSubscription(requestedPublishingInterval).get();
             client.getSubscriptionManager().addSubscriptionListener(new UaSubscriptionManager.SubscriptionListener() {
                 @Override

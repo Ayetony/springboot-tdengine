@@ -35,7 +35,6 @@ public class OpcConsumerLocator implements ApplicationContextAware {
 
     /**
      * 根据应用上下文获取相应的接口的所有实现类
-     *
      * @param applicationContext
      * @throws BeansException
      */
