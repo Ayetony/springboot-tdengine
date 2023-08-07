@@ -27,6 +27,8 @@
         <java.version>1.8</java.version>
         <jedis.version>3.3.0</jedis.version>
         <hutool.version>5.8.16</hutool.version>
+        <milo.sdk.client.version>0.6.3</milo.sdk.client.version>
+
     </properties>
     <dependencies>
         <dependency>
@@ -110,6 +112,12 @@
             <artifactId>jedis</artifactId>
             <version>${jedis.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.milo</groupId>
+            <artifactId>sdk-client</artifactId>
+            <version>${milo.sdk.client.version}</version>
+        </dependency>
+
     </dependencies>
 
 

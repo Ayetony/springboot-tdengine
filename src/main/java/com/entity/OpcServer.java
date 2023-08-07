@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 
 /**
  * @program: springboot-tdengine
- * @ClassName OpcTest
+ * @ClassName OpcServer
  * @author: ayetony miao
  * @create: 2023-08-07 21:14
  **/
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class OpcTest {
+public class OpcServer {
 
     private Integer id;
     private String addr;

@@ -1,6 +1,6 @@
 package com.service;
 
-import com.entity.OpcTest;
+import com.entity.OpcServer;
 import com.mapper.mysql.MysqlMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ public class MysqlService {
     @Resource
     private MysqlMapper mysqlMapper;
 
-    public List<OpcTest> queryOpcServers(){
+    public List<OpcServer> queryOpcServers(){
         return mysqlMapper.selectAllOpcServers();
     }
 }

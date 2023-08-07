@@ -1,6 +1,6 @@
 package com.mapper.mysql;
 
-import com.entity.OpcTest;
+import com.entity.OpcServer;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,5 +13,5 @@ import java.util.List;
  */
 @Component
 public interface MysqlMapper {
-    List<OpcTest> selectAllOpcServers();
+    List<OpcServer> selectAllOpcServers();
 }
