@@ -2,6 +2,8 @@ server:
   port: 7777
 
 spring:
+  application:
+    name: TDEngine-IOT
   datasource:
     tdengine-server:
       driver-class-name: com.taosdata.jdbc.rs.RestfulDriver
@@ -13,7 +15,7 @@ spring:
       maximum-pool-size: 15        #最大连接
       auto-commit: true        #自动提交
       idle-timeout: 30000        #最大空闲时常
-      pool-name: TDengineDruidCP        #连接池名
+      pool-name: TDenginePool        #连接池名
       max-lifetime: 1800000        #最大生命周期
       connection-timeout: 30000        #连接超时时间
       connection-test-query: show tables
@@ -32,6 +34,15 @@ spring:
       pool-name: MysqlDruidCP        #连接池名
       max-lifetime: 1800000        #最大生命周期
       connection-timeout: 30000        #连接超时时间
+  opc-ua:
+    url: opc.tcp://localhost:49320
+    requestedPublishingInterval: 1000.0
+    samplingInterval: 1000.0
+    queueSize: 1
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 2048MB
 
 #mybatis
 mybatis:
