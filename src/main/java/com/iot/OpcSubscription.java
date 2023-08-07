@@ -2,11 +2,14 @@ package com.iot;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
+import com.constants.OpcConstants;
 import com.entity.OpcServer;
 import com.entity.OpcTag;
+import com.entity.TagValue;
 import com.iot.Service.OpcConsumerLocator;
 import com.iot.util.OpcUtil;
-import com.service.MysqlService;
+import com.mapper.mysql.OpcServerMapper;
+import com.mapper.mysql.OpcTagMapper;
 import com.utils.RedisUtils;
 import com.websocket.AvicWebSocketOperator;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscriptionManager;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.UaException;
+import org.eclipse.milo.opcua.stack.core.types.builtin.DataValue;
 import org.eclipse.milo.opcua.stack.core.types.builtin.NodeId;
 import org.eclipse.milo.opcua.stack.core.types.builtin.StatusCode;
 import org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.UInteger;
@@ -61,7 +65,9 @@ public class OpcSubscription {
     @Resource
     private AvicWebSocketOperator webSocketOperator;
     @Resource
-    private MysqlService mysqlService;
+    private OpcServerMapper opcServerMapper;
+    @Resource
+    private OpcTagMapper opcTagMapper;
     @Resource
     private RedisUtils redisUtils;
 
@@ -71,7 +77,7 @@ public class OpcSubscription {
     @PostConstruct
     private void init() {
         // 自动连接开启的OPC服务器
-        List<OpcServer> enabledOpcServerList = mysqlService.queryOpcServers();
+        List<OpcServer> enabledOpcServerList = opcServerMapper.selectAllOpcServers();
         for (OpcServer opcServer : enabledOpcServerList) {
             this.run(opcServer);
             // 通知所有实现类初始化
@@ -95,26 +101,70 @@ public class OpcSubscription {
             return false;
         }
 
-//        List<OpcTag> iotDataList = this.opcTagMapper.selectList(new LambdaQueryWrapper<OpcTag>().eq(OpcTag::getOpcServerId, opcServer.getId()).eq(OpcTag::getNodeType, OpcConstants.NodeType.TAG));
+        List<OpcTag> iotDataItemList = this.opcTagMapper.selectList(opcServer.getId(), OpcConstants.NodeType.TAG);
 
-//        if (CollUtil.isEmpty(iotDataList)) {
-//            log.warn("Opc Server Tag Empty Exception");
-//            return false;
-//        }
+        if (CollUtil.isEmpty(iotDataItemList)) {
+            log.warn("Opc Server Tag Empty Exception");
+            return false;
+        }
         // TODO 把所有点位的code都放在redis里
         try {
             OpcUaClient client = OpcUtil.createClient(opcServer.getUrl(), opcServer.getOpcUserName(), opcServer.getOpcPassword());
             UaSubscription.ItemCreationCallback onItemCreated = (item, id) -> item.setValueConsumer((i, v) -> dataValueConsumer(i, v, opcServer.getId()));
-            this.subscribe(client, iotDataList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
+            this.subscribe(client, iotDataItemList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
             this.clientMap.put(opcServer, client);
             opcServer.setEnabled(1);
-            this.opcServerMapper.updateById(opcServer);
+//            this.opcServerMapper.updateById(opcServer);
             return true;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return false;
         }
 
+    }
+
+    /**
+     * 订阅到数据时
+     *
+     * @param item
+     * @param value
+     */
+    public void dataValueConsumer(UaMonitoredItem item, DataValue value, Long opcServerId) {
+        String itemId = (String) item.getReadValueId().getNodeId().getIdentifier();
+
+        String opcCode = itemId;
+        TagValue tagValue = OpcUtil.buildOpcValue(opcCode, itemId, value);
+        tagValue.setOpcServerId(opcServerId);
+        // 是否是重复回调
+        if (!repeatCallback(tagValue)) {
+            log.info("dataValueConsumer receive tag:{}", tagValue.getValue());
+            // TODO 消息写入influxDb
+            // TODO 消息写入kafka
+            // 消息WebSocket推送
+            webSocketOperator.sendAllMessage(OpcConstants.OpcMsgType.TAG, tagValue);
+            // 写入Redis
+            redisUtils.set(itemId, tagValue);
+            // 通知所有实现类
+            opcConsumerLocator.invokeCallback(tagValue);
+        }
+
+    }
+
+
+    /**
+     * 是否是重复回调
+     *
+     * @param tagValue tagValue
+     * @return true-是，false-否
+     */
+    private Boolean repeatCallback(TagValue tagValue) {
+        String key = tagValue.getOpcServerId() + tagValue.getTagName() + tagValue.getValue();
+        // true-存在，false-不存在
+        boolean contains = redisUtils.hasKey(key);
+        if (!contains) {
+            redisUtils.set(key, tagValue.getValue(), 3L);
+        }
+        return contains;
     }
 
 

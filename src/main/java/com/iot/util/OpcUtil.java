@@ -4,8 +4,8 @@ package com.iot.util;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
-import com.avic.mcp.iot.entity.OpcTag;
-import com.avic.mcp.iot.entity.TagValue;
+import com.entity.OpcTag;
+import com.entity.TagValue;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
@@ -62,7 +62,7 @@ public class OpcUtil {
         if (!Files.exists(securityTempDir)) {
             throw new Exception("Unable to Create Security Dir: " + securityTempDir);
         }
-        com.avic.mcp.iot.util.KeyStoreLoader keyStoreLoader = new com.avic.mcp.iot.util.KeyStoreLoader().load(securityTempDir);
+        com.iot.util.KeyStoreLoader keyStoreLoader = new com.iot.util.KeyStoreLoader().load(securityTempDir);
         IdentityProvider identityProvider;
         if (StrUtil.isNotBlank(username) && StrUtil.isNotBlank(password)) {
             identityProvider = new UsernameProvider(username, password);

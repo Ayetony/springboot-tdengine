@@ -1,7 +1,7 @@
 package com.service;
 
 import com.entity.OpcServer;
-import com.mapper.mysql.MysqlMapper;
+import com.mapper.mysql.OpcServerMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +18,9 @@ import java.util.List;
 @Transactional(transactionManager = "mysqlTransactionManager")
 public class MysqlService {
     @Resource
-    private MysqlMapper mysqlMapper;
+    private OpcServerMapper opcServerMapper;
 
     public List<OpcServer> queryOpcServers(){
-        return mysqlMapper.selectAllOpcServers();
+        return opcServerMapper.selectAllOpcServers();
     }
 }

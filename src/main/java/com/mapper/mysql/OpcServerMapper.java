@@ -12,6 +12,6 @@ import java.util.List;
  * @date 2021/3/11 14:30
  */
 @Component
-public interface MysqlMapper {
+public interface OpcServerMapper {
     List<OpcServer> selectAllOpcServers();
 }
