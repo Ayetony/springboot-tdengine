@@ -19,7 +19,7 @@
 
     <select id="selectAllOpcServers" resultMap="selectOpcServerMap">
         SELECT *
-        FROM opc_server
+        FROM opc_server where enabled = 0
     </select>
 
 </mapper>
