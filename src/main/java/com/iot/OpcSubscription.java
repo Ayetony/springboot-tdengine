@@ -141,6 +141,7 @@ public class OpcSubscription {
             // TODO 消息写入influxDb
             // TODO 消息写入kafka
             // 消息WebSocket推送
+            log.info("----- tag opc ,name = {} value:{}",tagValue.getTagName(),tagValue.asString());
             webSocketOperator.sendAllMessage(OpcConstants.OpcMsgType.TAG, tagValue);
             // 写入Redis
             redisUtils.set(itemId, tagValue);
