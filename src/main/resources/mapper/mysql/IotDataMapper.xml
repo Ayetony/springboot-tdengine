@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mapper.mysql.IotDataMapper">
+    <resultMap id="selectIotDataMap" type="com.entity.IotData">
+        <result column="data_source" property="dataSource" />
+        <result column="data_type" property="dataType" />
+        <result column="dbid" property="dbid" />
+        <result column="enabled" property="enabled" />
+        <result column="extended_fields" property="extendedFields" />
+        <result column="hardware_resource" property="hardwareResource" />
+        <result column="note" property="note" />
+        <result column="point_name" property="pointName" />
+        <result column="point_number" property="pointNumber" />
+        <result column="point_type" property="pointType" />
+        <result column="read_write_access" property="readWriteAccess" />
+        <result column="tag_name" property="tagName" />
+        <result column="unc" property="unc" />
+        <result column="version" property="version" />
+    </resultMap>
 
-    <select id="selectAllIotData" resultType="com.entity.IotData">
+    <select id="selectAllIotData" resultMap="selectIotDataMap">
         SELECT *
         FROM iot_data where enabled = 1
     </select>

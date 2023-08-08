@@ -2,7 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mapper.mysql.IotNodeMapper">
 
-    <select id="selectAllIotNode" resultType="com.entity.IotNode">
+    <resultMap id="selectIotNodeMap" type="com.entity.IotNode">
+        <id column="dbid" property="dbid" />
+        <result column="data_source_name" property="dataSourceName" />
+        <result column="data_source_number" property="dataSourceNumber" />
+        <result column="data_source_type" property="dataSourceType" />
+        <result column="enabled" property="enabled" />
+        <result column="extended_fields" property="extendedFields" />
+        <result column="host" property="host" />
+        <result column="note" property="note" />
+        <result column="password" property="password" />
+        <result column="port" property="port" />
+        <result column="username" property="username" />
+        <result column="version" property="version" />
+    </resultMap>
+
+    <select id="selectAllIotNode" resultMap="selectIotNodeMap">
         SELECT *
         FROM iot_node where enabled = 1
     </select>
