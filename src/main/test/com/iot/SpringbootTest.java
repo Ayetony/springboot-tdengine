@@ -1,6 +1,7 @@
 package com.iot;
 
 import com.DemoApp;
+import com.service.IotService;
 import com.service.MysqlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,10 +20,22 @@ public class SpringbootTest {
     @Resource
     private MysqlService mysqlService;
 
+    @Resource
+    private IotService iotService;
+
+
     @Test
     public void mysqlTest(){
         System.out.println(mysqlService.queryOpcServers());
     }
 
+    @Test
+    public void mysqlTest1(){
+        System.out.println(iotService.queryIotData());
+    }
 
+    @Test
+    public void mysqlTest2(){
+        System.out.println(iotService.queryIotNode());
+    }
 }
