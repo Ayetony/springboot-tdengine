@@ -18,9 +18,9 @@
         <result column="version" property="version" />
     </resultMap>
 
-    <select id="selectAllIotData" resultMap="selectIotDataMap">
+    <select id="selectList" resultMap="selectIotDataMap">
         SELECT *
-        FROM iot_data where enabled = 1
+        FROM iot_data where data_source = #{iotNodeId} and point_type = #{nodeType} and enabled = 0
     </select>
 
 </mapper>

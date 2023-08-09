@@ -19,7 +19,7 @@
 
     <select id="selectAllIotNode" resultMap="selectIotNodeMap">
         SELECT *
-        FROM iot_node where enabled = 1
+        FROM iot_node where enabled = 0
     </select>
 
 </mapper>

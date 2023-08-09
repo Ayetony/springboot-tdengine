@@ -1,6 +1,6 @@
 package com.iot.Service;
 
-import com.entity.OpcServer;
+import com.entity.IotNode;
 import com.entity.TagValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class ExecutionConsumer implements OpcConsumerAware {
 
     @Override
-    public void init(OpcServer opcServer) {
+    public void init(IotNode iotNode) {
 
     }
 

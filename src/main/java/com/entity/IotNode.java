@@ -1,8 +1,11 @@
 package com.entity;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode()
 public class IotNode {
     /**
      * Dbid
@@ -63,4 +66,19 @@ public class IotNode {
      * 备注
      */
     private String note;
+
+    public String getUrl() {
+        if (StrUtil.isNotBlank(this.getDataSourceType()) && StrUtil.isNotBlank(this.getHost())) {
+            String url = StrUtil.join("",
+                    this.getDataSourceType(),
+                    "://",
+                    this.getHost(),
+                    this.getPort() != null ? ":" : "",
+                    this.getPort() != null ? this.getPort() : ""
+            );
+            return url;
+        } else {
+            return null;
+        }
+    }
 }

@@ -15,7 +15,7 @@ import java.util.Date;
  */
 @Slf4j
 @Data
-public class TagValue extends OpcTag implements Serializable {
+public class TagValue extends IotData implements Serializable {
 
     /**
      * 源时间
