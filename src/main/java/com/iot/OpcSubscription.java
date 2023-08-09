@@ -5,6 +5,7 @@ import cn.hutool.core.map.MapUtil;
 import com.constants.OpcConstants;
 import com.entity.IotData;
 import com.entity.IotNode;
+import com.entity.OpcValue;
 import com.entity.TagValue;
 import com.iot.Service.OpcConsumerLocator;
 import com.iot.util.OpcUtil;
@@ -12,6 +13,7 @@ import com.mapper.mysql.IotDataMapper;
 import com.mapper.mysql.IotNodeMapper;
 import com.mapper.mysql.OpcServerMapper;
 import com.mapper.mysql.OpcTagMapper;
+import com.service.OpcValueService;
 import com.utils.RedisUtils;
 import com.websocket.AvicWebSocketOperator;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +33,7 @@ import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateReq
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -78,7 +80,9 @@ public class OpcSubscription {
     @Resource
     private RedisUtils redisUtils;
     @Resource
-    private TaskExecutor taskExecutor;
+    private AsyncTaskExecutor taskExecutor;
+    @Resource
+    private OpcValueService opcValueService;
 
     /**
      * 系统启动时加载：启动所有可用的OPCServer、启动订阅
@@ -115,10 +119,7 @@ public class OpcSubscription {
         if (this.clientMap.containsKey(iotNode)) {
             return false;
         }
-
-//        List<OpcTag> iotDataItemList = this.opcTagMapper.selectList(iotNode.getDbid().longValue(), OpcConstants.NodeType.TAG);
         List<IotData> iotDataItemList = this.iotDataMapper.selectList(iotNode.getDbid().longValue(), OpcConstants.NodeType.TAG);
-
         if (CollUtil.isEmpty(iotDataItemList)) {
             log.warn("Opc Server Tag Empty Exception");
             return false;
@@ -129,8 +130,11 @@ public class OpcSubscription {
             UaSubscription.ItemCreationCallback onItemCreated = (item, id) -> item.setValueConsumer((i, v) -> dataValueConsumer(i, v, iotNode.getDbid()));
             this.subscribe(client, iotDataItemList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
             this.clientMap.put(iotNode, client);
-            iotNode.setEnabled(1);
-//            this.opcServerMapper.updateById(opcServer);
+            /**
+             * iotNode.setEnabled(1);
+             * this.opcServerMapper.updateById(opcServer);
+             *
+             */
             return true;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -147,20 +151,27 @@ public class OpcSubscription {
      */
     public void dataValueConsumer(UaMonitoredItem item, DataValue value, Integer iotNodeId) {
         String itemId = (String) item.getReadValueId().getNodeId().getIdentifier();
-
-        String opcCode = itemId;
-        TagValue tagValue = OpcUtil.buildOpcValue(opcCode, itemId, value);
+        TagValue tagValue = OpcUtil.buildOpcValue(itemId, itemId, value);
         tagValue.setDataSource(iotNodeId);
         // 是否是重复回调
         if (!repeatCallback(tagValue)) {
             log.info("dataValueConsumer receive tag:{}", tagValue.getValue());
-            // TODO 消息写入 tdengine
+            // message write ahead
             taskExecutor.execute(() -> {
-
+                try {
+                    OpcValue opcValue = new OpcValue();
+                    opcValue.setTagValue(tagValue.asString());
+                    opcValue.setServerTime(tagValue.getServerTime());
+                    opcValue.setSourceTime(tagValue.getSourceTime());
+                    opcValueService.save(opcValue);
+                    log.info("[ message write to td engine successful ] opc value:{}", opcValue.toString());
+                }catch (Exception e){
+                    e.printStackTrace();
+                    log.error("[ 写入 td engine 失败] 消息：{}",tagValue.asString());
+                }
             });
-            // TODO 消息写入kafka
             // 消息WebSocket推送
-            log.info("----- tag opc ,name = {} value:{}",tagValue.getTagName(),tagValue.asString());
+            log.info("[ websocket push opc tag value ] ,opc name = {} value = {}", tagValue.getTagName(), tagValue.asString());
             webSocketOperator.sendAllMessage(OpcConstants.OpcMsgType.TAG, tagValue);
             // 写入Redis
             redisUtils.set(itemId, tagValue);
