@@ -2,10 +2,8 @@ package com.service;
 
 import com.entity.IotData;
 import com.entity.IotNode;
-import com.entity.OpcServer;
 import com.mapper.mysql.IotDataMapper;
 import com.mapper.mysql.IotNodeMapper;
-import com.mapper.mysql.OpcServerMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +20,7 @@ public class IotService {
     private IotNodeMapper iotNodeMapper;
 
     public List<IotData> queryIotData(){
-        return iotDataMapper.selectAllIotData();
+        return iotDataMapper.selectList(1L,4);
     }
 
     public List<IotNode> queryIotNode(){

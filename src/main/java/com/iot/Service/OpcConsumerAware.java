@@ -1,6 +1,6 @@
 package com.iot.Service;
 
-import com.entity.OpcServer;
+import com.entity.IotNode;
 import com.entity.TagValue;
 
 /**
@@ -11,9 +11,9 @@ public interface OpcConsumerAware {
 
     /**
      * 初始化
-     * @param opcServer
+     * @param iotNode
      */
-    void init(OpcServer opcServer);
+    void init(IotNode iotNode);
 
     /**
      * OPC订阅的回调方法

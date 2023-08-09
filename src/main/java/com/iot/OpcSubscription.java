@@ -3,11 +3,13 @@ package com.iot;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import com.constants.OpcConstants;
-import com.entity.OpcServer;
-import com.entity.OpcTag;
+import com.entity.IotData;
+import com.entity.IotNode;
 import com.entity.TagValue;
 import com.iot.Service.OpcConsumerLocator;
 import com.iot.util.OpcUtil;
+import com.mapper.mysql.IotDataMapper;
+import com.mapper.mysql.IotNodeMapper;
 import com.mapper.mysql.OpcServerMapper;
 import com.mapper.mysql.OpcTagMapper;
 import com.utils.RedisUtils;
@@ -49,7 +51,7 @@ import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.
 @Component
 public class OpcSubscription {
 
-    private final Map<OpcServer, OpcUaClient> clientMap = MapUtil.newConcurrentHashMap();
+    private final Map<IotNode, OpcUaClient> clientMap = MapUtil.newConcurrentHashMap();
     private final Map<OpcUaClient, Boolean> clientStatusMap = MapUtil.newConcurrentHashMap();
     private final Set<UaSubscription> failedSubscriptionSet = CollUtil.newLinkedHashSet();
     //kepServer 监控项
@@ -67,7 +69,11 @@ public class OpcSubscription {
     @Resource
     private OpcServerMapper opcServerMapper;
     @Resource
+    private IotNodeMapper iotNodeMapper;
+    @Resource
     private OpcTagMapper opcTagMapper;
+    @Resource
+    private IotDataMapper iotDataMapper;
     @Resource
     private RedisUtils redisUtils;
 
@@ -77,31 +83,38 @@ public class OpcSubscription {
     @PostConstruct
     private void init() {
         // 自动连接开启的OPC服务器
-        List<OpcServer> enabledOpcServerList = opcServerMapper.selectAllOpcServers();
-        for (OpcServer opcServer : enabledOpcServerList) {
-            this.run(opcServer);
+//        List<OpcServer> enabledOpcServerList = opcServerMapper.selectAllOpcServers();
+//        for (OpcServer opcServer : enabledOpcServerList) {
+//            this.run(opcServer);
+//            // 通知所有实现类初始化
+//            opcConsumerLocator.invokeInit(opcServer);
+//        }
+        List<IotNode> enabledIotNodeList = iotNodeMapper.selectAllIotNode();
+        for (IotNode iotNode : enabledIotNodeList) {
+            this.run(iotNode);
             // 通知所有实现类初始化
-            opcConsumerLocator.invokeInit(opcServer);
+            opcConsumerLocator.invokeInit(iotNode);
         }
     }
 
     /**
      * 启动OPC服务器
      *
-     * @param opcServer
+     * @param iotNode
      * @return
      */
-    public Boolean run(OpcServer opcServer) {
-        if (opcServer == null) {
+    public Boolean run(IotNode iotNode) {
+        if (iotNode == null) {
             log.warn("Opc UA Server Not Found Exception");
             return false;
         }
 
-        if (this.clientMap.containsKey(opcServer)) {
+        if (this.clientMap.containsKey(iotNode)) {
             return false;
         }
 
-        List<OpcTag> iotDataItemList = this.opcTagMapper.selectList(opcServer.getId(), OpcConstants.NodeType.TAG);
+//        List<OpcTag> iotDataItemList = this.opcTagMapper.selectList(iotNode.getDbid().longValue(), OpcConstants.NodeType.TAG);
+        List<IotData> iotDataItemList = this.iotDataMapper.selectList(iotNode.getDbid().longValue(), OpcConstants.NodeType.TAG);
 
         if (CollUtil.isEmpty(iotDataItemList)) {
             log.warn("Opc Server Tag Empty Exception");
@@ -109,11 +122,11 @@ public class OpcSubscription {
         }
         // TODO 把所有点位的code都放在redis里
         try {
-            OpcUaClient client = OpcUtil.createClient(opcServer.getUrl(), opcServer.getOpcUserName(), opcServer.getOpcPassword());
-            UaSubscription.ItemCreationCallback onItemCreated = (item, id) -> item.setValueConsumer((i, v) -> dataValueConsumer(i, v, opcServer.getId()));
+            OpcUaClient client = OpcUtil.createClient(iotNode.getUrl(), iotNode.getUsername(), iotNode.getPassword());
+            UaSubscription.ItemCreationCallback onItemCreated = (item, id) -> item.setValueConsumer((i, v) -> dataValueConsumer(i, v, iotNode.getDbid()));
             this.subscribe(client, iotDataItemList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
-            this.clientMap.put(opcServer, client);
-            opcServer.setEnabled(1);
+            this.clientMap.put(iotNode, client);
+            iotNode.setEnabled(1);
 //            this.opcServerMapper.updateById(opcServer);
             return true;
         } catch (Exception e) {
@@ -129,12 +142,12 @@ public class OpcSubscription {
      * @param item
      * @param value
      */
-    public void dataValueConsumer(UaMonitoredItem item, DataValue value, Long opcServerId) {
+    public void dataValueConsumer(UaMonitoredItem item, DataValue value, Integer iotNodeId) {
         String itemId = (String) item.getReadValueId().getNodeId().getIdentifier();
 
         String opcCode = itemId;
         TagValue tagValue = OpcUtil.buildOpcValue(opcCode, itemId, value);
-        tagValue.setOpcServerId(opcServerId);
+        tagValue.setDataSource(iotNodeId);
         // 是否是重复回调
         if (!repeatCallback(tagValue)) {
             log.info("dataValueConsumer receive tag:{}", tagValue.getValue());
@@ -159,7 +172,7 @@ public class OpcSubscription {
      * @return true-是，false-否
      */
     private Boolean repeatCallback(TagValue tagValue) {
-        String key = tagValue.getOpcServerId() + tagValue.getTagName() + tagValue.getValue();
+        String key = tagValue.getDataSource() + tagValue.getTagName() + tagValue.getValue();
         // true-存在，false-不存在
         boolean contains = redisUtils.hasKey(key);
         if (!contains) {
@@ -173,11 +186,11 @@ public class OpcSubscription {
      * 订阅消息，requestedPublishingInterval 为1000.0ms
      *
      * @param client
-     * @param opcTagList
+     * @param iotDataList
      * @param onItemCreated
      */
-    private void subscribe(OpcUaClient client, List<OpcTag> opcTagList, UaSubscription.ItemCreationCallback onItemCreated) {
-        subscribe(client, opcTagList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
+    private void subscribe(OpcUaClient client, List<IotData> iotDataList, UaSubscription.ItemCreationCallback onItemCreated) {
+        subscribe(client, iotDataList, onItemCreated, this.requestedPublishingInterval, this.samplingInterval, this.queueSize);
     }
 
 
@@ -185,13 +198,13 @@ public class OpcSubscription {
      * 订阅消息
      *
      * @param client
-     * @param opcTagList
+     * @param iotDataList
      * @param onItemCreated
      * @param requestedPublishingInterval
      * @param samplingInterval
      * @param queueSize
      */
-    public void subscribe(OpcUaClient client, List<OpcTag> opcTagList, UaSubscription.ItemCreationCallback onItemCreated, double requestedPublishingInterval, double samplingInterval, int queueSize) {
+    public void subscribe(OpcUaClient client, List<IotData> iotDataList, UaSubscription.ItemCreationCallback onItemCreated, double requestedPublishingInterval, double samplingInterval, int queueSize) {
         try {
             // 创建连接
             client.connect().get();
@@ -211,7 +224,7 @@ public class OpcSubscription {
                     UaSubscriptionManager.SubscriptionListener.super.onSubscriptionTransferFailed(subscription, statusCode);
 
                     if (!failedSubscriptionSet.contains(subscription)) {
-                        subscribe(client, opcTagList, onItemCreated);
+                        subscribe(client, iotDataList, onItemCreated);
                         failedSubscriptionSet.add(subscription);
                     }
                 }
@@ -219,8 +232,8 @@ public class OpcSubscription {
 
             // 创建订阅的变量
             List<ReadValueId> readValueIdList = CollUtil.newArrayList();
-            for (OpcTag opcTag : opcTagList) {
-                NodeId nodeId = new NodeId(2, opcTag.getItemId());
+            for (IotData iotData : iotDataList) {
+                NodeId nodeId = new NodeId(2, iotData.getTagName());
                 ReadValueId readValueId = new ReadValueId(nodeId, AttributeId.Value.uid(), null, null);
                 readValueIdList.add(readValueId);
             }

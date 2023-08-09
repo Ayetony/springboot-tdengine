@@ -19,11 +19,15 @@ spring:
       max-lifetime: 1800000        #最大生命周期
       connection-timeout: 30000        #连接超时时间
       connection-test-query: show tables
-    mysql-server:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://47.92.104.113:3306/tsdb?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true&allowMultiQueries=true
-      username: root
-      password: 2ZQINmZ0YSiVgnlPMnKx
+    oracle-server:
+      #driver-class-name: com.mysql.cj.jdbc.Driver
+      #jdbc-url: jdbc:mysql://47.92.104.113:3306/tsdb?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true&allowMultiQueries=true
+      #username: root
+      #password: 2ZQINmZ0YSiVgnlPMnKx
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      jdbc-url: jdbc:oracle:thin:@192.168.2.230:1521:orcl
+      username: IOT_COLLECTOR
+      password: rootroot
       type: com.zaxxer.hikari.HikariDataSource
       minimum-idle: 5                 #最小连接
       maximum-pool-size: 15        #最大连接

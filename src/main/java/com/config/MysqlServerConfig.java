@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 @MapperScan(basePackages = {"com.mapper.mysql"}, sqlSessionTemplateRef  = "mysqlSqlSessionTemplate")
 public class MysqlServerConfig {
     @Bean(name = "mysqlDataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.mysql-server")
+    @ConfigurationProperties(prefix = "spring.datasource.oracle-server")
     @Primary
     public DataSource mysqlDataSource() {
         return DataSourceBuilder.create().build();

@@ -6,7 +6,7 @@ package com.iot.Service;
  * @author: ayetony miao
  * @create: 2023-08-07 22:17
  **/
-import com.entity.OpcServer;
+import com.entity.IotNode;
 import com.entity.TagValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -62,8 +62,8 @@ public class OpcConsumerLocator implements ApplicationContextAware {
         return map.get(key);
     }
 
-    public void invokeInit(OpcServer opcServer) {
-        this.invoke(METHOD_INIT, opcServer);
+    public void invokeInit(IotNode iotNode) {
+        this.invoke(METHOD_INIT, iotNode);
     }
 
     public void invokeCallback(TagValue tagValue) {
@@ -78,7 +78,7 @@ public class OpcConsumerLocator implements ApplicationContextAware {
                 log.debug("OpcConsumerAware的实现类{}的{}方法调用", value, methodName);
                 switch (methodName) {
                     case METHOD_INIT:
-                        value.init((OpcServer) sourceObject);
+                        value.init((IotNode) sourceObject);
                         break;
                     case METHOD_CALLBACK:
                         value.callback((TagValue) sourceObject);

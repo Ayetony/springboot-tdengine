@@ -4,7 +4,7 @@ package com.iot.util;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONArray;
-import com.entity.OpcTag;
+import com.entity.IotData;
 import com.entity.TagValue;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
@@ -88,14 +88,14 @@ public class OpcUtil {
         return client;
     }
 
-    public static TagValue read(OpcUaClient client, OpcTag opcTag) {
-        Map<String, TagValue> resultMap = read(client, CollUtil.newArrayList(opcTag));
-        return resultMap.get(opcTag.getItemId());
+    public static TagValue read(OpcUaClient client, IotData iotData) {
+        Map<String, TagValue> resultMap = read(client, CollUtil.newArrayList(iotData));
+        return resultMap.get(iotData.getTagName());
     }
 
-    public static Map<String, TagValue> read(OpcUaClient client, List<OpcTag> opcTagList) {
+    public static Map<String, TagValue> read(OpcUaClient client, List<IotData> iotDataList) {
         if (client == null
-                || CollUtil.isEmpty(opcTagList)) {
+                || CollUtil.isEmpty(iotDataList)) {
             return Maps.newLinkedHashMap();
         }
 
@@ -103,8 +103,8 @@ public class OpcUtil {
             client.connect().get();
 
             List<NodeId> nodeIdList = CollUtil.newArrayList();
-            for (OpcTag opcTag : opcTagList) {
-                NodeId nodeId = new NodeId(2, opcTag.getItemId());
+            for (IotData iotData : iotDataList) {
+                NodeId nodeId = new NodeId(2, iotData.getTagName());
                 nodeIdList.add(nodeId);
             }
 
@@ -112,19 +112,19 @@ public class OpcUtil {
             List<DataValue> dataValueList = future.get();
 
             Map<String, TagValue> resultMap = Maps.newLinkedHashMap();
-            for (int i = 0; i < opcTagList.size(); i++) {
-                OpcTag opcTag = opcTagList.get(i);
+            for (int i = 0; i < iotDataList.size(); i++) {
+                IotData iotData = iotDataList.get(i);
                 DataValue dataValue = dataValueList.size() > i
                         ? dataValueList.get(i)
                         : null;
-                if (opcTag == null
-                        || StrUtil.isBlank(opcTag.getItemId())
+                if (iotData == null
+                        || StrUtil.isBlank(iotData.getTagName())
                         || dataValue == null) {
                     continue;
                 }
 
-                TagValue tagValue = buildOpcValue(opcTag.getTagName(), opcTag.getItemId(), dataValue);
-                resultMap.put(opcTag.getItemId(), tagValue);
+                TagValue tagValue = buildOpcValue(iotData.getPointName(), iotData.getTagName(), dataValue);
+                resultMap.put(iotData.getTagName(), tagValue);
             }
             client.disconnect();
             return resultMap;
@@ -153,7 +153,7 @@ public class OpcUtil {
             List<NodeId> nodeIdList = CollUtil.newArrayList();
             List<DataValue> dataValueList = CollUtil.newArrayList();
             for (TagValue tagValue : opcValueList) {
-                String itemId = tagValue.getItemId();
+                String itemId = tagValue.getTagName();
                 if (itemId == null) {
                     continue;
                 }
@@ -222,8 +222,8 @@ public class OpcUtil {
         }
 
         TagValue tagValue = new TagValue();
-        tagValue.setTagName(code);
-        tagValue.setItemId(itemId);
+        tagValue.setPointName(code);
+        tagValue.setTagName(itemId);
         tagValue.setValue(dataValue.getValue() != null ? valueObject : null);
         tagValue.setSourceTime(dataValue.getSourceTime() != null ? dataValue.getSourceTime().getJavaDate() : null);
         tagValue.setServerTime(dataValue.getServerTime() != null ? dataValue.getServerTime().getJavaDate() : null);
