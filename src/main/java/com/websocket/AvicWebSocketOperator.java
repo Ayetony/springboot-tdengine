@@ -20,7 +20,6 @@ public class AvicWebSocketOperator {
 
     public void sendAllLogisticsMessage(Long startEquipmentId, Long targetEquipmentId, Integer Category) {
         SendSocketDTO socketDTO = new SendSocketDTO();
-        //立体库起始设备不清楚，暂时设置为 0
         socketDTO.setStartEquipmentId(startEquipmentId);
         socketDTO.setTargetEquipmentId(targetEquipmentId);
         socketDTO.setTransportContentCategory(Category);
