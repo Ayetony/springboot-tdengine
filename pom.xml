@@ -117,11 +117,7 @@
             <artifactId>sdk-client</artifactId>
             <version>${milo.sdk.client.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.mapdb</groupId>
-            <artifactId>mapdb</artifactId>
-            <version>3.0.1</version>
-        </dependency>
+
 
         <!-- websocket -->
         <dependency>
