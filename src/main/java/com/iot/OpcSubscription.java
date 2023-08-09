@@ -31,6 +31,7 @@ import org.eclipse.milo.opcua.stack.core.types.structured.MonitoredItemCreateReq
 import org.eclipse.milo.opcua.stack.core.types.structured.MonitoringParameters;
 import org.eclipse.milo.opcua.stack.core.types.structured.ReadValueId;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -76,6 +77,8 @@ public class OpcSubscription {
     private IotDataMapper iotDataMapper;
     @Resource
     private RedisUtils redisUtils;
+    @Resource
+    private TaskExecutor taskExecutor;
 
     /**
      * 系统启动时加载：启动所有可用的OPCServer、启动订阅
@@ -151,7 +154,10 @@ public class OpcSubscription {
         // 是否是重复回调
         if (!repeatCallback(tagValue)) {
             log.info("dataValueConsumer receive tag:{}", tagValue.getValue());
-            // TODO 消息写入influxDb
+            // TODO 消息写入 tdengine
+            taskExecutor.execute(() -> {
+
+            });
             // TODO 消息写入kafka
             // 消息WebSocket推送
             log.info("----- tag opc ,name = {} value:{}",tagValue.getTagName(),tagValue.asString());
