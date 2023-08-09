@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mapper.tdengine.OpcValueMapper">
+
+    <resultMap id="BaseResultMap" type="com.entity.OpcValue">
+        <id column="source_time" jdbcType="TIMESTAMP" property="sourceTime" />
+        <result column="server_time" jdbcType="TIMESTAMP" property="serverTime" />
+        <result column="tag_value" jdbcType="VARCHAR" property="tagValue" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        source_time, server_time, tag_value
+    </sql>
+
+    <select id="select" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from opc_value
+        order by ts asc
+        <if test="limit != null">
+            limit #{limit,jdbcType=BIGINT}
+        </if>
+        <if test="offset != null">
+            offset #{offset,jdbcType=BIGINT}
+        </if>
+    </select>
+
+    <insert id="insert" parameterType="com.entity.Weather" >
+        insert into opc_value (source_time, server_time, tag_value) values (#{sourceTime}, #{serverTime}, #{tagValue})
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List" >
+        insert into weather (source_time, server_time, tag_value) values
+        <foreach separator=" " collection="list" item="opcValue" index="index" >
+            (now + #{index}a, #{opcValue.serverTime}, #{opcValue.tagValue})
+        </foreach>
+    </insert>
+
+    <delete id="delByTs" parameterType="date">
+        delete from opc_value where source_time=#{sourceTime}
+    </delete>
+
+
+</mapper>
