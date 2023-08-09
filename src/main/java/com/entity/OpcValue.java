@@ -1,7 +1,10 @@
 package com.entity;
 
+import lombok.Data;
+
 import java.util.Date;
 
+@Data
 public class OpcValue {
     /**
      * 源时间
@@ -15,5 +18,5 @@ public class OpcValue {
     /**
      * 点位值
      */
-    private String value;
+    private String tagValue;
 }
